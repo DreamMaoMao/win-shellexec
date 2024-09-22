@@ -1,5 +1,4 @@
 #include <windows.h>
-#include <shellapi.h>
 #include <iostream>
 #include <string>
 
@@ -7,7 +6,7 @@
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <command> [arguments]" << std::endl;
+        MessageBox(NULL, "Usage: <command> [arguments]", "Error", MB_OK | MB_ICONERROR);
         return 1;
     }
 
@@ -28,25 +27,25 @@ int main(int argc, char* argv[]) {
     HCURSOR hCursor = LoadCursor(NULL, IDC_ARROW);
     SetCursor(hCursor);
 
-    SHELLEXECUTEINFO sei = {0};
-    sei.cbSize = sizeof(SHELLEXECUTEINFO);
-    sei.fMask = SEE_MASK_NOCLOSEPROCESS;
-    sei.hwnd = NULL;
-    sei.lpVerb = "open"; // 使用 "open" 动词以避免终端问题
-    sei.lpFile = command.c_str(); // 要执行的命令
-    sei.lpParameters = parameters.c_str(); // 命令参数
-    sei.lpDirectory = NULL; // 使用当前目录
-    sei.nShow = SW_HIDE; // 隐藏窗口
-    sei.hInstApp = NULL;
+    // 使用 CreateProcess 代替 ShellExecuteEx
+    STARTUPINFO si = {0};
+    PROCESS_INFORMATION pi = {0};
+    si.cb = sizeof(STARTUPINFO);
+    si.dwFlags = STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_HIDE;
 
-    if (!ShellExecuteEx(&sei)) {
-        std::cerr << "ShellExecuteEx failed: " << GetLastError() << std::endl;
+    std::string fullCommand = command + " " + parameters;
+
+    if (!CreateProcess(NULL, const_cast<char*>(fullCommand.c_str()), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+        std::string errorMsg = "CreateProcess failed: " + std::to_string(GetLastError());
+        MessageBox(NULL, errorMsg.c_str(), "Error", MB_OK | MB_ICONERROR);
         return 1;
     }
 
     // 等待进程结束
-    WaitForSingleObject(sei.hProcess, INFINITE);
-    CloseHandle(sei.hProcess);
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
 
     // 恢复原始光标状态
     SetCursor(hOriginalCursor);
