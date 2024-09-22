@@ -20,13 +20,6 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // 保存当前光标状态
-    HCURSOR hOriginalCursor = GetCursor();
-
-    // 设置光标为默认箭头
-    HCURSOR hCursor = LoadCursor(NULL, IDC_ARROW);
-    SetCursor(hCursor);
-
     // 使用 CreateProcess 代替 ShellExecuteEx
     STARTUPINFO si = {0};
     PROCESS_INFORMATION pi = {0};
@@ -46,9 +39,6 @@ int main(int argc, char* argv[]) {
     WaitForSingleObject(pi.hProcess, INFINITE);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
-
-    // 恢复原始光标状态
-    SetCursor(hOriginalCursor);
 
     return 0;
 }
