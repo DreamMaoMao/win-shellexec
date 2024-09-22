@@ -21,15 +21,22 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    // 保存当前光标状态
+    HCURSOR hOriginalCursor = GetCursor();
+
+    // 设置光标为默认箭头
+    HCURSOR hCursor = LoadCursor(NULL, IDC_ARROW);
+    SetCursor(hCursor);
+
     SHELLEXECUTEINFO sei = {0};
     sei.cbSize = sizeof(SHELLEXECUTEINFO);
     sei.fMask = SEE_MASK_NOCLOSEPROCESS;
     sei.hwnd = NULL;
-    sei.lpVerb = "open"; // Use "open" verb to avoid terminal issues
-    sei.lpFile = command.c_str(); // Command to execute
-    sei.lpParameters = parameters.c_str(); // Command parameters
-    sei.lpDirectory = NULL; // Use current directory
-    sei.nShow = SW_HIDE; // Hide the window
+    sei.lpVerb = "open"; // 使用 "open" 动词以避免终端问题
+    sei.lpFile = command.c_str(); // 要执行的命令
+    sei.lpParameters = parameters.c_str(); // 命令参数
+    sei.lpDirectory = NULL; // 使用当前目录
+    sei.nShow = SW_HIDE; // 隐藏窗口
     sei.hInstApp = NULL;
 
     if (!ShellExecuteEx(&sei)) {
@@ -37,9 +44,12 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Wait for the process to finish
+    // 等待进程结束
     WaitForSingleObject(sei.hProcess, INFINITE);
     CloseHandle(sei.hProcess);
+
+    // 恢复原始光标状态
+    SetCursor(hOriginalCursor);
 
     return 0;
 }
